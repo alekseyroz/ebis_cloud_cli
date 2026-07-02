@@ -4,16 +4,32 @@ import argparse
 import json
 import os
 import sys
+from pathlib import Path
 
 from ebis_cloud import EbisClient
 
 
+def _load_dotenv(path: Path) -> None:
+    """Populate os.environ from a simple KEY=VALUE .env file, without overriding existing vars."""
+    if not path.exists():
+        return
+    for line in path.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
+_load_dotenv(Path(__file__).resolve().parent / ".env")
+
+
 def _client() -> EbisClient:
     base_url = os.environ.get("EBIS_BASE_URL", "https://ia.ebis5.com/api/integration/external")
-    username = os.environ.get("EBIS_USERNAME", "")
-    password = os.environ.get("EBIS_PASSWORD", "")
+    username = os.environ.get("EBIS_USERNAME")
+    password = os.environ.get("EBIS_PASSWORD")
     if not username or not password:
-        print("error: set EBIS_USERNAME and EBIS_PASSWORD", file=sys.stderr)
+        print("error: set EBIS_USERNAME and EBIS_PASSWORD (or create a .env file)", file=sys.stderr)
         sys.exit(1)
     return EbisClient(base_url, username, password)
 
@@ -28,6 +44,10 @@ def _out(data):
 
 def _wo_lists(args):
     _out(_client().get_workorder_lists(args.name))
+
+
+def _wo_listing_lists(args):
+    _out(_client().get_workorder_listing_lists(args.name or None))
 
 
 def _wo_export(args):
@@ -52,8 +72,8 @@ def _wo_totals(args):
 
 def _wo_listing(args):
     _out(_client().get_workorder_listing(
-        wo_status_id=args.status,
-        wo_type_id=args.type,
+        wo_status_id=int(args.status),
+        wo_type_id=int(args.type),
         city_ids=args.city or None,
     ))
 
@@ -105,6 +125,10 @@ def _add_wo_parsers(parent):
     p = sub.add_parser("lists", help="fetch reference lists")
     p.add_argument("--name", metavar="LIST_NAME", help="specific list to fetch, e.g. CityID")
     p.set_defaults(func=_wo_lists)
+
+    p = sub.add_parser("listing-lists", help="fetch listing reference lists (WoStatusID, WoTypeID, etc.)")
+    p.add_argument("--name", nargs="+", metavar="LIST_NAME", help="specific list(s) to fetch")
+    p.set_defaults(func=_wo_listing_lists)
 
     p = sub.add_parser("export", help="export work orders")
     p.add_argument("--city", nargs="+", metavar="ID")
