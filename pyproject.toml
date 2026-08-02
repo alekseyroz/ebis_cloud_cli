@@ -1,18 +1,21 @@
 [project]
-name = "ebis-cloud-cli"
+name = "veryon-wc-cli"
 version = "0.1.0"
-description = "CLI for manually testing the ebis_cloud library"
+description = "CLI for manually testing the veryon_wc library"
 requires-python = ">=3.14"
 dependencies = [
-    "ebis-cloud",
+    "veryon-wc",
 ]
 
 [project.scripts]
-ebis = "cli:main"
+veryonwc = "cli:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.uv.sources]
-ebis-cloud = { path = "../ebis_cloud" }
+veryon-wc = { path = "../ebis_cloud" }
+
+[tool.hatch.build.targets.wheel]
+include = ["cli.py"]

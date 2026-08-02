@@ -1,4 +1,4 @@
-"""CLI for manually testing the ebis_cloud library."""
+"""CLI for manually testing the veryon_wc library."""
 
 import argparse
 import json
@@ -6,7 +6,7 @@ import os
 import sys
 from pathlib import Path
 
-from ebis_cloud import EbisClient
+from veryon_wc import WcClient
 
 
 def _load_dotenv(path: Path) -> None:
@@ -24,14 +24,14 @@ def _load_dotenv(path: Path) -> None:
 _load_dotenv(Path(__file__).resolve().parent / ".env")
 
 
-def _client() -> EbisClient:
-    base_url = os.environ.get("EBIS_BASE_URL", "https://ia.ebis5.com/api/integration/external")
-    username = os.environ.get("EBIS_USERNAME")
-    password = os.environ.get("EBIS_PASSWORD")
+def _client() -> WcClient:
+    base_url = os.environ.get("WC_BASE_URL", "https://ia.ebis5.com/api/integration/external")
+    username = os.environ.get("WC_USERNAME")
+    password = os.environ.get("WC_PASSWORD")
     if not username or not password:
-        print("error: set EBIS_USERNAME and EBIS_PASSWORD (or create a .env file)", file=sys.stderr)
+        print("error: set WC_USERNAME and WC_PASSWORD (or create a .env file)", file=sys.stderr)
         sys.exit(1)
-    return EbisClient(base_url, username, password)
+    return WcClient(base_url, username, password)
 
 
 def _out(data):
@@ -189,13 +189,13 @@ def _add_user_parsers(parent):
 
 def main():
     parser = argparse.ArgumentParser(
-        prog="ebis",
-        description="eBis Cloud CLI — test the ebis_cloud library against a live API",
+        prog="veryonwc",
+        description="Veryon Workcenter (WC) CLI — test the veryon_wc library against a live API",
     )
     parser.add_argument(
         "--url",
         metavar="URL",
-        help="override EBIS_BASE_URL",
+        help="override WC_BASE_URL",
         default=None,
     )
     sub = parser.add_subparsers(dest="resource", required=True)
@@ -207,7 +207,7 @@ def main():
     args = parser.parse_args()
 
     if args.url:
-        os.environ["EBIS_BASE_URL"] = args.url
+        os.environ["WC_BASE_URL"] = args.url
 
     args.func(args)
 
